@@ -1,0 +1,1047 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}Flask-MQTT example{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+  $(document).ready(function() {
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    /*
+    //MQTT
+    $('#publish').click(function(event) {
+      var topic = $('#topic').val();
+      var message = $('#message').val();
+      var qos = $('#qos').val();
+      var data = '{"topic": "' + topic + '", "message": "' + message + '", "qos": ' + qos + '}';
+      socket.emit('publish', data=data);
+    });
+
+    $('#subscribe').click(function(event) {
+      var topic = $('#subscribe_topic').val();
+      var qos = $('#subscribe_qos').val();
+      var data = '{"topic": "' + topic + '", "qos": ' + qos + '}';
+      socket.emit('subscribe', data=data);
+      $('#subscribe').hide();
+      $('#unsubscribe').show();
+      $('#subscribe_topic').prop('readonly', true);
+    });
+    */
+    
+    //920
+    $('#publish').click(function(event) {   //$('class_id') -> class yg dipake di html
+      socket.emit('scheduledsend');   //socket.emit('nama_function_yg_di_python')
+    });
+
+    $('#subscribe').click(function(event) {
+      socket.emit('receive');
+      $('#subscribe').hide();
+      $('#unsubscribe').show();
+      $('#subscribe_topic').prop('readonly', true);
+    });
+    
+    $('#unsubscribe').click(function(event) {
+      socket.emit('unsubscribe_all');
+      $('#subscribe').show(); 
+      $('#unsubscribe').hide();
+      $('#subscribe_topic').prop('readonly', false);
+    });
+    
+    //赤い文字のクラス
+    function NG() {
+	//let className = 'subscribe_message'+j;
+	//let textarea = document.querySelector(className);
+	let textarea = document.querySelectorAll("textarea");
+	for (let i=0;i<textarea.length;i++) {
+	  textarea[i].classList.add("test");
+	}
+	//textarea.classList.add("test");
+      
+	let temp = document.querySelectorAll(".test");
+	for (let i=0;i<temp.length;i++) {
+	  temp[i].style.color = "red";
+	  temp[i].style.fontSize = "10px";
+	}
+    };
+    
+    //緑文字のクラス
+    function OK() {
+	//let className = 'subscribe_message'+j;
+	//let textarea = document.querySelector(className);
+	let textarea = document.querySelectorAll("textarea");
+	for (let i=0;i<textarea.length;i++) {
+	  textarea[i].classList.add("test");
+	}
+	//textarea.classList.add("test");
+      
+	let temp = document.querySelectorAll(".test");
+	for (let i=0;i<temp.length;i++) {
+	  temp[i].style.color = "green";
+	  temp[i].style.fontSize = "10px";
+	}
+    };
+
+
+    socket.on('mqtt_message', function(data) {
+	console.log(data);
+	var text = '(Topic' + data['topic'] + '): ' + data['payload'];
+	for (let i=0;i<50;i++){
+	    var $textarea = $('#subscribe_messages'+i);
+	    $textarea.val(text + '\n');
+	}
+	if (String(data['payload'])=="NG"){
+	    NG();
+	} else {
+	    OK();
+	}
+     
+      const c = document.getElementByID("myCanvas");
+      const ctx = c.getContext("2d"); 
+      const ng = ctx.createLinearGradient(0,0,100,0);
+      ng.addColorStop(0, "red");
+      ng.addColorStop(1, "red");
+      ctx.fillStyle = ng;
+      ctx.fillRect(0,0,200,100);
+    });
+  });
+</script>
+{% endblock %}
+
+
+{% block content %}
+<head>
+    <title>付帯設備監視システム</title>
+    <link rel="stylesheet" href='../static/style.css'/>
+    <meta http-equiv="Content-Type" content="text/html; charset=SJIS" />
+    <style>
+		body {
+			text-align: center;
+		}
+
+    </style>
+</head>
+
+<body>
+    <h1>状況一覧</h1>
+    <nav>
+	<a href="/"class="button">メインページ戻る </a>
+    </nav>
+    <hr>
+   <div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-12">
+      <h1>Flask-MQTT Example</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Publish MQTT Message</h3>
+        </div>
+        <div class="panel-body">
+          <div class="col-xs-12">
+            <div class="row">
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label class="control-label col-xs-4">Topic: </label>
+                  <div class="col-xs-8">
+                    <input id="topic" class="form-control">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="control-label col-xs-4">Message: </label>
+                  <div class="col-xs-8">
+                    <input id="message" class="form-control">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="control-label col-xs-4">Qos: </label>
+                  <div class="col-xs-8">
+                    <select id="qos" class="form-control">
+                      <option value=0>0</option>
+                      <option value=1>1</option>
+                      <option value=2>2</option>
+                    </select>
+                  </div> 
+                </div>
+                <div class="form-group">
+                  <div class="col-xs-8 col-xs-offset-4">
+                    <button id="publish" class="btn btn-primary">Publish</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Subscribe MQTT Messages</h3>
+        </div>
+        <div class="panel-body">
+          <div class="col-xs-12">
+            <div class="row">
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label class="control-label col-xs-4">Topic:</label>
+                  <div class="col-xs-8">
+                    <input id="subscribe_topic" class="form-control">
+		  </div>
+                </div>
+                <div class="form-group">
+                  <label class="control-label col-xs-4">Qos: </label>
+                  <div class="col-xs-8">
+                    <select id="subscribe_qos" class="form-control">
+                      <option value=0>0</option>
+                      <option value=1>1</option>
+                      <option value=2>2</option>
+                    </select>
+                  </div> 
+                </div>
+                <div class="form-group"> 
+                  <div class="col-xs-8 col-xs-offset-4">
+                    <button id="subscribe" class="btn btn-primary">Subscribe</button>
+                    <button id="unsubscribe" class="btn btn-default" style="display: none;" >Unsubscribe</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="control-label col-xs-4">Messages:</label>
+                  <div class="col-xs-8">
+                    <!--<textarea id="subscribe_messages" class="form-control" rows=1></textarea>-->
+                    <canvas id="myCanvas" width="100" height="50" style="border:1px solid grey"></canvas>
+                    <!--<canvas id="notMyCanvas", width="100", height="50" style="border:1px solid red;"></canvas>-->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<br>
+    <hr>
+    <div style="width: 100%; display: table;">
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<h2>No</h2>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<h2>工場</h2>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<h2>工程</h2>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<h2>設備 名</h2>
+	    </div>
+	    <div style="width: 20%; display: table-cell;"> 
+		<h2>状況</h2>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>1</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>C型歳屑回収集塵装置</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages1" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>２</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>充填9号熱廃棄</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages0" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>3</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>リサイクル３号集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages2" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>4</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>リサイクル2号集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages3" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>5</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>リサイクル1号集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages4" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>６</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>充填7号熱廃棄</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages5" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>７</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>充填８号熱廃棄</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages6" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>８</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>充填7号排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages7" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>９</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>充填８号排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages8" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>10</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>充填9号排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages9" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>11</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>練合集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages10" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>12</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>練合排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages11" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>13</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(中2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>計量設備集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages12" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>14</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>正極(中2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>ふるい設備集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages13" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>15</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>粉砕側排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages14" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>16</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極チラー分電盤(1M-8)</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages15" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>17</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>分析室横側排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages16" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>18</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>塗着側排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages17" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>19</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>塗工集塵機側排水ピット</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages18" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>20</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>塗工炉循環ファン</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages19" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>21</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>塗工排気1・2炉湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages20" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>22</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>塗工排気3・4炉湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages21" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>23</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>塗工排気5・6炉湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages22" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>24</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(1F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極圧延・コーター排気湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages23" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+		<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>1</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極単板11・12一般湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages24" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>2</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極単板11・12JT湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages24" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>3</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極単板13・14JT湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages25" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>4</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極単板13・14一般湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages26" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>5</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極単板15・16一般湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages27" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>6</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>負極(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>負極単板15・16JT湿式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages28" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>7</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A11・12用45℃極板乾燥室・ドライブース空調</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages29" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>８</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A11・12ライン脱磁乾式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages44" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>９</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A13・14ライン脱磁乾式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages30" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>10</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A11ライン熱排気</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages31" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>11</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A12ライン熱排気</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages32" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>12</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A13ライン熱排気</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages33" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>13</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A11・12・13ヒートレスドライヤー</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages34" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>14</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A13・14用45℃極板乾燥室・ドライブース空調</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages35" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>15</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A14・15ヒートレスドライヤー</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages36" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>16</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A15用45℃極板乾燥室・ドライブース空調</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages37" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>17</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>溶接治具清掃機用集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages38" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>18</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>粉塵ブーズ用集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages39" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>19</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>治具清掃台用集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages40" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>20</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A15イン脱磁乾式集塵機</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages41" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>21</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A14ライン熱排気</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages42" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+	<div style="display: table-row">
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>22</p>
+	    </div>
+	    <div style="width: 10%; display: table-cell;"> 
+		<p>第3</p>
+	    </div>
+	    <div style="width: 15%; display: table-cell;">
+		<p>A(2F)</p>
+	    </div>
+	    <div style="width: 45%; display: table-cell;">
+		<p>A15ライン熱排気</p>
+	    </div>
+	    <div> 
+		<textarea id="subscribe_messages43" class="form-control" rows=1></textarea>
+	    </div>
+	</div>
+    </div>
+    
+    <hr>
+    <hr>
+
+	
+    <p> 株式会社　プライムアースEVエナジー</p>
+    <p> 湖西ME室　企画G</p>
+    <p> @2023 Developed by Yoseph Abel</p>
+    
+
+
+</body>
+{% endblock %}
+
